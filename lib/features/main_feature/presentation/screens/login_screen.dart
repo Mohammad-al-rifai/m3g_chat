@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:m3g_chat/app/logic/func.dart';
 
 import '../../../../app/components/resources/color_manager.dart';
 import '../../../../app/components/resources/styles_manager.dart';
 import '../../../../app/components/widgets/defalut_form_field.dart';
 import '../../../../app/components/widgets/default_button.dart';
+import '../layouts/chat_layout.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -13,15 +15,15 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  var emailController = TextEditingController();
-  var passwordController = TextEditingController();
+  TextEditingController phoneController = TextEditingController();
+  TextEditingController passwordController = TextEditingController();
   var formKey = GlobalKey<FormState>();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Password Manager'),
+        title: const Text('M3G Chat'),
       ),
       body: Center(
         child: SingleChildScrollView(
@@ -40,20 +42,20 @@ class _LoginScreenState extends State<LoginScreen> {
                     height: 15.0,
                   ),
                   Text(
-                    'File manager will save your file in Secure Place',
+                    'M3G App Will Travel with you over the universe',
                     style: Theme.of(context).textTheme.displayMedium,
                   ),
                   const SizedBox(
                     height: 15.0,
                   ),
                   DefaultFormField(
-                    controller: emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    label: 'Email-Address',
+                    controller: phoneController,
+                    keyboardType: TextInputType.phone,
+                    label: 'your Phone',
                     prefixIcon: Icons.email,
                     validator: (String value) {
                       if (value.isEmpty) {
-                        return 'Email Address Required!';
+                        return 'Your Phone Required!';
                       }
                     },
                   ),
@@ -77,6 +79,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   DefaultButton(
                     function: () {
                       if (formKey.currentState!.validate()) {
+                        defaultNavigator(
+                            context: context, widget: const ChatLayout());
                       } else {
                         print('Else');
                       }

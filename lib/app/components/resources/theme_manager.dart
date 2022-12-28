@@ -10,7 +10,7 @@ ThemeData getLightApplicationTheme() {
   return ThemeData(
     // main colors
     primaryColor: ColorManager.primary,
-    primarySwatch: Colors.yellow,
+    primarySwatch: Colors.green,
     primaryColorLight: ColorManager.lightPrimary,
     primaryColorDark: ColorManager.darkPrimary,
     disabledColor: ColorManager.primary,
