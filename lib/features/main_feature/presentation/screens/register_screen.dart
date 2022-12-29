@@ -1,65 +1,65 @@
+// ignore_for_file: must_be_immutable
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:m3g_chat/app/components/resources/constants_manager.dart';
-import 'package:m3g_chat/app/logic/func.dart';
-import 'package:m3g_chat/config/di/injector.dart';
-import 'package:m3g_chat/features/main_feature/presentation/cubit/auth_cubit/auth_states.dart';
-import 'package:m3g_chat/features/main_feature/presentation/screens/register_screen.dart';
 
 import '../../../../app/components/resources/color_manager.dart';
 import '../../../../app/components/resources/styles_manager.dart';
 import '../../../../app/components/widgets/defalut_form_field.dart';
 import '../../../../app/components/widgets/default_button.dart';
 import '../../../../app/components/widgets/toast_notification.dart';
-import '../../domain/bodies/login_model.dart';
+import '../../../../app/logic/func.dart';
+import '../../../../config/di/injector.dart';
+import '../../domain/bodies/register_body.dart';
 import '../cubit/auth_cubit/auth_cubit.dart';
+import '../cubit/auth_cubit/auth_states.dart';
 import '../layouts/chat_layout.dart';
+import 'login_screen.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({Key? key}) : super(key: key);
+class RegisterScreen extends StatelessWidget {
+  RegisterScreen({Key? key}) : super(key: key);
 
-  @override
-  State<LoginScreen> createState() => _LoginScreenState();
-}
+  var phoneController = TextEditingController();
+  var passwordController = TextEditingController();
+  var userNameController = TextEditingController();
 
-class _LoginScreenState extends State<LoginScreen> {
-  TextEditingController phoneController = TextEditingController();
-  TextEditingController passwordController = TextEditingController();
   var formKey = GlobalKey<FormState>();
-  LoginBody loginBody = LoginBody();
+
+  final RegisterBody _registerBody = RegisterBody();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('M3G Chat'),
+        title: const Text('File manager'),
       ),
-      body: Center(
-        child: BlocProvider(
-          create: (context) => injector<AuthCubit>(),
-          child: BlocConsumer<AuthCubit, AuthStates>(
-            listener: (context, state) {
-              if (state is LoginDoneState) {
-                // ===============SAVE TOKEN HERE=================
-                AppConstants.token = state.loginModel.token!;
-                // ===============================================
-                defaultReplaceNavigator(context: context, widget: const ChatLayout());
-                // ================================
-                showToast(
-                  text: 'Login Done Success',
-                  state: ToastStates.SUCCESS,
-                );
-              }
-              if (state is LoginErrorState) {
-                showToast(
-                  text: 'No Internet Connection-Try Again',
-                  state: ToastStates.ERROR,
-                );
-              }
-            },
-            builder: (context, state) {
-              print(state.runtimeType);
-              return SingleChildScrollView(
+      body: BlocProvider(
+        create: (context) => injector<AuthCubit>(),
+        child: BlocConsumer<AuthCubit, AuthStates>(
+          listener: (context, state) {
+            if (state is RegisterDoneState) {
+              // ===============SAVE TOKEN HERE=================
+              AppConstants.token = state.registerModel.token!;
+              // ===============================================
+              showToast(
+                text: 'Register Done Success',
+                state: ToastStates.SUCCESS,
+              );
+              defaultReplaceNavigator(
+                  context: context, widget: const ChatLayout());
+            }
+            if (state is RegisterErrorState) {
+              showToast(
+                text: 'No Internet Connection-Try Again',
+                state: ToastStates.ERROR,
+              );
+            }
+          },
+          builder: (context, state) {
+            print(state.runtimeType);
+            return Center(
+              child: SingleChildScrollView(
                 child: Padding(
                   padding: const EdgeInsets.all(20.0),
                   child: Form(
@@ -68,15 +68,29 @@ class _LoginScreenState extends State<LoginScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'LOGIN',
+                          'Register',
                           style: Theme.of(context).textTheme.displayLarge,
                         ),
                         const SizedBox(
                           height: 15.0,
                         ),
                         Text(
-                          'M3G App Will Travel with you over the universe',
+                          'Register Now',
                           style: Theme.of(context).textTheme.displayMedium,
+                        ),
+                        const SizedBox(
+                          height: 15.0,
+                        ),
+                        DefaultFormField(
+                          controller: userNameController,
+                          keyboardType: TextInputType.text,
+                          label: 'User Name',
+                          prefixIcon: Icons.person,
+                          validator: (String value) {
+                            if (value.isEmpty) {
+                              return ' User Name Required!';
+                            }
+                          },
                         ),
                         const SizedBox(
                           height: 15.0,
@@ -85,10 +99,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           controller: phoneController,
                           keyboardType: TextInputType.phone,
                           label: 'your Phone',
-                          prefixIcon: Icons.email,
+                          prefixIcon: Icons.call,
                           validator: (String value) {
                             if (value.isEmpty) {
-                              return 'Your Phone Required!';
+                              return 'Phone Required!';
                             }
                           },
                         ),
@@ -112,24 +126,26 @@ class _LoginScreenState extends State<LoginScreen> {
                         DefaultButton(
                           function: () {
                             if (formKey.currentState!.validate()) {
-                              loginBody.phone = int.parse(phoneController.text);
-                              loginBody.password = passwordController.text;
-                              context
-                                  .read<AuthCubit>()
-                                  .login(loginBody: loginBody);
+                              _registerBody.username = userNameController.text;
+                              _registerBody.phone =
+                                  int.parse(phoneController.text);
+                              _registerBody.password = passwordController.text;
+                              context.read<AuthCubit>().register(
+                                    registerBody: _registerBody,
+                                  );
                             } else {
                               print('Else');
                             }
                           },
-                          text: 'Login',
+                          text: 'register',
                           isUpperCase: true,
-                          isLoading: (state is LoginLoadingState),
+                          isLoading: (state is RegisterLoadingState),
                         ),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
                             Text(
-                              'Don\'t Have Account? ',
+                              'Have Account? ',
                               style: getLightStyle(
                                 color: ColorManager.lightGrey,
                               ),
@@ -138,11 +154,11 @@ class _LoginScreenState extends State<LoginScreen> {
                               onPressed: () {
                                 defaultReplaceNavigator(
                                   context: context,
-                                  widget: RegisterScreen(),
+                                  widget: const LoginScreen(),
                                 );
                               },
                               child: Text(
-                                'Register Now',
+                                'Login Now',
                                 style: getMediumStyle(
                                   color: ColorManager.primary,
                                 ),
@@ -154,9 +170,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                 ),
-              );
-            },
-          ),
+              ),
+            );
+          },
         ),
       ),
     );
