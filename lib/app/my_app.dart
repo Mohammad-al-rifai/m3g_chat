@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import 'components/resources/routes_manager.dart';
 import 'components/resources/theme_manager.dart';
 

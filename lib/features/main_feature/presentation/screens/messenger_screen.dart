@@ -1,19 +1,44 @@
 // ignore_for_file: must_be_immutable
 
 import 'package:flutter/material.dart';
+import 'package:m3g_chat/app/components/resources/constants_manager.dart';
 import 'package:m3g_chat/app/components/widgets/defalut_form_field.dart';
+import 'package:m3g_chat/app/logic/func.dart';
+import 'package:m3g_chat/features/main_feature/domain/models/all_users_model.dart';
+import 'package:m3g_chat/features/main_feature/presentation/screens/t_chat_screen.dart';
 
-import 'chat_screen.dart';
+import '../../../../app/socket_io/socket_io.dart';
 
-class MessengerScreen extends StatefulWidget {
-  const MessengerScreen({Key? key}) : super(key: key);
+class ContactsScreen extends StatefulWidget {
+  const ContactsScreen({Key? key}) : super(key: key);
 
   @override
-  State<MessengerScreen> createState() => _MessengerScreenState();
+  State<ContactsScreen> createState() => _ContactsScreenState();
 }
 
-class _MessengerScreenState extends State<MessengerScreen> {
+class _ContactsScreenState extends State<ContactsScreen> {
   TextEditingController searchController = TextEditingController();
+  AllUsersModel allUsersModel = AllUsersModel();
+
+  @override
+  void initState() {
+    super.initState();
+    SocketIO.socket?.emit('getUsers', {
+      'token':
+          'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2M2FkOTRkMzA3NzVhYTMyMzhlYWU0MzEiLCJpYXQiOjE2NzI0Nzg3NDZ9.gUxm0IN2fPNKBo3oYaM-KQ1jFIIe_yHPmUKLDV_fUQ8'
+    });
+    SocketIO.socket?.on('All-Users', (data) {
+      print('Get Users Success');
+      allUsersModel = AllUsersModel.fromJson(data);
+      setState(() {});
+    });
+
+    SocketIO.socket?.on('user-in', (data) {
+      print('user-in Success');
+      print(data);
+      setState(() {});
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -82,32 +107,19 @@ class _MessengerScreenState extends State<MessengerScreen> {
             const SizedBox(
               height: 20.0,
             ),
-            SizedBox(
-              height: 110.0,
-              child: ListView.separated(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsetsDirectional.only(start: 10.0),
-                scrollDirection: Axis.horizontal,
-                itemBuilder: (context, index) => buildStoryItem(),
-                separatorBuilder: (context, index) => const SizedBox(
-                  width: 20.0,
-                ),
-                itemCount: 10,
-              ),
-            ),
             const SizedBox(
               height: 30.0,
             ),
             ListView.separated(
               shrinkWrap: true,
               padding: const EdgeInsetsDirectional.only(start: 10.0, end: 5.0),
-              // This Build All item Once because it part of scrollable Screen
               physics: const NeverScrollableScrollPhysics(),
-              itemBuilder: (context, index) => buildChatItem(),
+              itemBuilder: (context, index) =>
+                  buildChatItem(allUsersModel.users?[index]),
               separatorBuilder: (context, index) => const SizedBox(
                 height: 20.0,
               ),
-              itemCount: 10,
+              itemCount: allUsersModel.users?.length ?? 2,
             ),
           ],
         ),
@@ -115,47 +127,17 @@ class _MessengerScreenState extends State<MessengerScreen> {
     );
   }
 
-  Widget buildStoryItem() => SizedBox(
-        width: 60.0,
-        child: Column(
-          children: [
-            Stack(
-              alignment: AlignmentDirectional.bottomEnd,
-              children: const [
-                CircleAvatar(
-                  radius: 30.0,
-                  backgroundImage: NetworkImage(
-                      'https://img.freepik.com/free-photo/waist-up-portrait-handsome-serious-unshaven-male-keeps-hands-together-dressed-dark-blue-shirt-has-talk-with-interlocutor-stands-against-white-wall-self-confident-man-freelancer_273609-16320.jpg?w=996&t=st=1661917658~exp=1661918258~hmac=cb29f519e16efc09291926fb0f0ea80dcfa028b412e2c568d9299bc28a44906d'),
-                ),
-                Padding(
-                  padding: EdgeInsetsDirectional.only(
-                    bottom: 3.0,
-                    end: 3.0,
-                  ),
-                  child: CircleAvatar(
-                    backgroundColor: Colors.red,
-                    radius: 7.0,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(
-              height: 6.0,
-            ),
-            const Text(
-              'Muhammad Reza AlRifai',
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
-        ),
-      );
-
-  Widget buildChatItem() => InkWell(
+  Widget buildChatItem(Users? user) => InkWell(
         onTap: () {
-          Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute(builder: (context) => const ChatScreen()),
-              (route) => true);
+          SocketIO.socket?.emit('new user', {
+            'username': user?.username,
+            'phone': user?.phone,
+            'id': AppConstants.uId,
+          });
+          defaultNavigator(
+            context: context,
+            widget: ChatPage(uId: user!.sId!),
+          );
         },
         child: Row(
           children: [
@@ -186,9 +168,9 @@ class _MessengerScreenState extends State<MessengerScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Muhammad AlRifai',
-                    style: TextStyle(
+                  Text(
+                    user?.username ?? 'Muhammad AlRifai',
+                    style: const TextStyle(
                       fontSize: 16.0,
                       fontWeight: FontWeight.bold,
                     ),

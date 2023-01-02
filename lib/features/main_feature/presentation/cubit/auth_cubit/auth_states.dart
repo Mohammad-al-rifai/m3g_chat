@@ -1,3 +1,4 @@
+import '../../../domain/models/all_users_model.dart';
 import '../../../domain/models/auth_model.dart';
 
 abstract class AuthStates {}
@@ -26,3 +27,13 @@ class RegisterDoneState extends AuthStates {
 }
 
 class RegisterErrorState extends AuthStates {}
+
+// All Users States
+class GetAllUsersLoadingState extends AuthStates {}
+
+class GetAllUsersDoneState extends AuthStates {
+
+  GetAllUsersDoneState();
+}
+
+class GetAllUsersErrorState extends AuthStates {}

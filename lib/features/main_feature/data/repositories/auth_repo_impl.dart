@@ -1,12 +1,13 @@
 import 'package:injectable/injectable.dart';
+import 'package:m3g_chat/app/components/resources/constants_manager.dart';
 import 'package:m3g_chat/features/main_feature/domain/bodies/register_body.dart';
+import 'package:m3g_chat/features/main_feature/domain/models/all_users_model.dart';
 
-import '../../domain/bodies/login_model.dart';
+import '../../domain/bodies/login_body.dart';
 import '../../domain/models/auth_model.dart';
 import '../../domain/repositories/auth_repo.dart';
 import '../data_sources/auth_api/auth_api_service.dart';
 
-@LazySingleton(as: AuthRepo)
 class AuthRepoImpl extends AuthRepo {
   final AuthApiService _authApiService;
 
@@ -28,5 +29,10 @@ class AuthRepoImpl extends AuthRepo {
     return await _authApiService.register(
       registerBody: registerBody,
     );
+  }
+
+  @override
+  Future<AllUsersModel> getAllUsers() async {
+    return await _authApiService.getAllUsers(AppConstants.token);
   }
 }

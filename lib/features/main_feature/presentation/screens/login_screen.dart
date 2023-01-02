@@ -1,19 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:m3g_chat/app/components/resources/constants_manager.dart';
 import 'package:m3g_chat/app/logic/func.dart';
-import 'package:m3g_chat/config/di/injector.dart';
-import 'package:m3g_chat/features/main_feature/presentation/cubit/auth_cubit/auth_states.dart';
+import 'package:m3g_chat/app/socket_io/socket_io.dart';
+import 'package:m3g_chat/features/main_feature/domain/models/auth_model.dart';
 import 'package:m3g_chat/features/main_feature/presentation/screens/register_screen.dart';
 
 import '../../../../app/components/resources/color_manager.dart';
 import '../../../../app/components/resources/styles_manager.dart';
 import '../../../../app/components/widgets/defalut_form_field.dart';
 import '../../../../app/components/widgets/default_button.dart';
-import '../../../../app/components/widgets/toast_notification.dart';
-import '../../domain/bodies/login_model.dart';
-import '../cubit/auth_cubit/auth_cubit.dart';
+import '../../domain/bodies/login_body.dart';
 import '../layouts/chat_layout.dart';
+import 'messenger_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -28,6 +26,35 @@ class _LoginScreenState extends State<LoginScreen> {
   var formKey = GlobalKey<FormState>();
   LoginBody loginBody = LoginBody();
 
+  AuthModel authModel = AuthModel();
+
+  bool isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    SocketIO.socket?.on('log-Success', (data) {
+      print('Login Success');
+      print(data);
+      authModel = AuthModel.fromJson(data);
+      print('Token is : ');
+      print(authModel.token);
+      if (authModel.token != null && authModel.user?.sId != null) {
+        AppConstants.token = authModel.token!;
+        AppConstants.uId = authModel.user!.sId!;
+      }
+
+      SocketIO.socket!.io.options['extraHeaders'] = {
+        'token': 'Bearer ${authModel.token!}'
+      }; // Update the extra headers.
+      SocketIO.socket!.io
+        ..disconnect()
+        ..connect(); // Reconnect the socket manually.
+
+      defaultReplaceNavigator(context: context, widget: const ContactsScreen());
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -35,127 +62,100 @@ class _LoginScreenState extends State<LoginScreen> {
         title: const Text('M3G Chat'),
       ),
       body: Center(
-        child: BlocProvider(
-          create: (context) => injector<AuthCubit>(),
-          child: BlocConsumer<AuthCubit, AuthStates>(
-            listener: (context, state) {
-              if (state is LoginDoneState) {
-                // ===============SAVE TOKEN HERE=================
-                AppConstants.token = state.loginModel.token!;
-                // ===============================================
-                defaultReplaceNavigator(context: context, widget: const ChatLayout());
-                // ================================
-                showToast(
-                  text: 'Login Done Success',
-                  state: ToastStates.SUCCESS,
-                );
-              }
-              if (state is LoginErrorState) {
-                showToast(
-                  text: 'No Internet Connection-Try Again',
-                  state: ToastStates.ERROR,
-                );
-              }
-            },
-            builder: (context, state) {
-              print(state.runtimeType);
-              return SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Form(
-                    key: formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'LOGIN',
-                          style: Theme.of(context).textTheme.displayLarge,
-                        ),
-                        const SizedBox(
-                          height: 15.0,
-                        ),
-                        Text(
-                          'M3G App Will Travel with you over the universe',
-                          style: Theme.of(context).textTheme.displayMedium,
-                        ),
-                        const SizedBox(
-                          height: 15.0,
-                        ),
-                        DefaultFormField(
-                          controller: phoneController,
-                          keyboardType: TextInputType.phone,
-                          label: 'your Phone',
-                          prefixIcon: Icons.email,
-                          validator: (String value) {
-                            if (value.isEmpty) {
-                              return 'Your Phone Required!';
-                            }
-                          },
-                        ),
-                        const SizedBox(
-                          height: 15.0,
-                        ),
-                        DefaultFormField(
-                          controller: passwordController,
-                          keyboardType: TextInputType.visiblePassword,
-                          label: 'Password',
-                          prefixIcon: Icons.lock,
-                          validator: (String value) {
-                            if (value.isEmpty) {
-                              return 'Password Required!';
-                            }
-                          },
-                        ),
-                        const SizedBox(
-                          height: 20.0,
-                        ),
-                        DefaultButton(
-                          function: () {
-                            if (formKey.currentState!.validate()) {
-                              loginBody.phone = int.parse(phoneController.text);
-                              loginBody.password = passwordController.text;
-                              context
-                                  .read<AuthCubit>()
-                                  .login(loginBody: loginBody);
-                            } else {
-                              print('Else');
-                            }
-                          },
-                          text: 'Login',
-                          isUpperCase: true,
-                          isLoading: (state is LoginLoadingState),
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Don\'t Have Account? ',
-                              style: getLightStyle(
-                                color: ColorManager.lightGrey,
-                              ),
-                            ),
-                            MaterialButton(
-                              onPressed: () {
-                                defaultReplaceNavigator(
-                                  context: context,
-                                  widget: RegisterScreen(),
-                                );
-                              },
-                              child: Text(
-                                'Register Now',
-                                style: getMediumStyle(
-                                  color: ColorManager.primary,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Form(
+              key: formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'LOGIN',
+                    style: Theme.of(context).textTheme.displayLarge,
                   ),
-                ),
-              );
-            },
+                  const SizedBox(
+                    height: 15.0,
+                  ),
+                  Text(
+                    'M3G App Will Travel with you over the universe',
+                    style: Theme.of(context).textTheme.displayMedium,
+                  ),
+                  const SizedBox(
+                    height: 15.0,
+                  ),
+                  DefaultFormField(
+                    controller: phoneController,
+                    keyboardType: TextInputType.phone,
+                    label: 'your Phone',
+                    prefixIcon: Icons.email,
+                    validator: (String value) {
+                      if (value.isEmpty) {
+                        return 'Your Phone Required!';
+                      }
+                    },
+                  ),
+                  const SizedBox(
+                    height: 15.0,
+                  ),
+                  DefaultFormField(
+                    controller: passwordController,
+                    keyboardType: TextInputType.visiblePassword,
+                    label: 'Password',
+                    prefixIcon: Icons.lock,
+                    validator: (String value) {
+                      if (value.isEmpty) {
+                        return 'Password Required!';
+                      }
+                    },
+                  ),
+                  const SizedBox(
+                    height: 20.0,
+                  ),
+                  DefaultButton(
+                    function: () {
+                      if (formKey.currentState!.validate()) {
+                        setState(() {
+                          isLoading = !isLoading;
+                        });
+                        loginBody.phone = int.parse(phoneController.text);
+                        loginBody.password = passwordController.text;
+
+                        SocketIO.socket?.emit('login', loginBody.toJson());
+                      }
+                    },
+                    text: 'Login',
+                    isUpperCase: true,
+                    isLoading: isLoading,
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Don\'t Have Account? ',
+                        style: getLightStyle(
+                          color: ColorManager.lightGrey,
+                        ),
+                      ),
+                      MaterialButton(
+                        onPressed: () {
+                          defaultReplaceNavigator(
+                            context: context,
+                            widget: const RegisterScreen(),
+                          );
+                        },
+                        child: Text(
+                          'Register Now',
+                          style: getMediumStyle(
+                            color: ColorManager.primary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
       ),
