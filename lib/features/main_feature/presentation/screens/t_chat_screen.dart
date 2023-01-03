@@ -59,7 +59,13 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   sendMessage(String messageEncrypted) {
-    SocketIO.socket?.emit('msg', messageModel.toJson());
+  //   SocketIO.socket?.emit('msg', messageModel.toJson());
+  //   hmacModel.from = AppConstants.uId;
+  //   hmacModel.to = widget.uId;
+  //   hmacModel.message = messageEncrypted;
+  //   messageModel.mac = HMacAlgorithm.create(hmacModel.toJson());
+  // }
+    SocketIO.socket?.emit('msg-PGB', messageModel.toJson());
     hmacModel.from = AppConstants.uId;
     hmacModel.to = widget.uId;
     hmacModel.message = messageEncrypted;
@@ -100,7 +106,8 @@ class _ChatPageState extends State<ChatPage> {
       allChats[chatMessageModel.from?.sId]?.add(chatMessageModel);
       if (chatMessageModel.from?.sId == widget.uId) {
         String value = AESAlg.decryption(
-            cipherText: base64.encode(decodeHexString(chatMessageModel.message!)));
+            cipherText:
+                base64.encode(decodeHexString(chatMessageModel.message!)));
         final textMessage = types.TextMessage(
           author: types.User(id: widget.uId),
           createdAt: DateTime.now().millisecondsSinceEpoch,

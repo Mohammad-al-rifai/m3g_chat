@@ -48,7 +48,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (authModel.token != null && authModel.user?.sId != null) {
         AppConstants.token = authModel.token!;
         AppConstants.uId = authModel.user!.sId!;
+        AppConstants.phone = authModel.user!.phone!;
+        AppConstants.username = authModel.user!.username!;
       }
+      SocketIO.socket!.io.options['extraHeaders'] = {
+        'token': 'Bearer ${authModel.token!}'
+      }; // Update the extra headers.
+      SocketIO.socket!.io
+        ..disconnect()
+        ..connect(); // Reconnect the socket manually.
       defaultReplaceNavigator(context: context, widget: const ContactsScreen());
     });
   }

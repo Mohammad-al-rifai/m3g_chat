@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:m3g_chat/app/components/resources/constants_manager.dart';
 import 'package:m3g_chat/app/components/widgets/defalut_form_field.dart';
+import 'package:m3g_chat/app/encryption/pgp_algorithm.dart';
 import 'package:m3g_chat/app/logic/func.dart';
 import 'package:m3g_chat/features/main_feature/domain/models/all_users_model.dart';
 import 'package:m3g_chat/features/main_feature/presentation/screens/t_chat_screen.dart';
@@ -23,20 +24,32 @@ class _ContactsScreenState extends State<ContactsScreen> {
   @override
   void initState() {
     super.initState();
-    SocketIO.socket?.emit('getUsers', {
-      'token':
-          'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2M2FkOTRkMzA3NzVhYTMyMzhlYWU0MzEiLCJpYXQiOjE2NzI0Nzg3NDZ9.gUxm0IN2fPNKBo3oYaM-KQ1jFIIe_yHPmUKLDV_fUQ8'
+    SocketIO.socket?.emit('new user', {
+      'username': AppConstants.username,
+      'phone': AppConstants.phone,
+      'id': AppConstants.uId,
     });
+    SocketIO.socket?.on('user-in', (data) {
+      print('user-in Success');
+      AppConstants.publicKey = data['PublicKey'];
+      print('AppConstants.publicKey: ${AppConstants.publicKey}');
+      setState(() {});
+    });
+    SocketIO.socket?.emit('getUsers', {});
     SocketIO.socket?.on('All-Users', (data) {
       print('Get Users Success');
       allUsersModel = AllUsersModel.fromJson(data);
       setState(() {});
     });
 
-    SocketIO.socket?.on('user-in', (data) {
-      print('user-in Success');
-      print(data);
-      setState(() {});
+    SocketIO.socket?.emit(
+      'newSessionKey',
+      {'SessionKey': AppConstants.sessionKey},
+    );
+
+    SocketIO.socket?.on('Acceptance-session-key', (data) {
+      print('Data Is : $data');
+      AppConstants.secret = AppConstants.random;
     });
   }
 
@@ -48,19 +61,11 @@ class _ContactsScreenState extends State<ContactsScreen> {
         elevation: 0.0,
         title: Row(
           children: const [
-            CircleAvatar(
-              radius: 20.0,
-              backgroundImage: NetworkImage(
-                  'https://img.freepik.com/free-photo/waist-up-portrait-handsome-serious-unshaven-male-keeps-hands-together-dressed-dark-blue-shirt-has-talk-with-interlocutor-stands-against-white-wall-self-confident-man-freelancer_273609-16320.jpg?w=996&t=st=1661917658~exp=1661918258~hmac=cb29f519e16efc09291926fb0f0ea80dcfa028b412e2c568d9299bc28a44906d'),
-            ),
             SizedBox(
               width: 15.0,
             ),
             Text(
               'Chats',
-              style: TextStyle(
-                color: Colors.black,
-              ),
             ),
           ],
         ),
@@ -129,11 +134,6 @@ class _ContactsScreenState extends State<ContactsScreen> {
 
   Widget buildChatItem(Users? user) => InkWell(
         onTap: () {
-          SocketIO.socket?.emit('new user', {
-            'username': user?.username,
-            'phone': user?.phone,
-            'id': AppConstants.uId,
-          });
           defaultNavigator(
             context: context,
             widget: ChatPage(uId: user!.sId!),

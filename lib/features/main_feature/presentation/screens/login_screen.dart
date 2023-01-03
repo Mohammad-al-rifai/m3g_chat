@@ -9,6 +9,7 @@ import '../../../../app/components/resources/color_manager.dart';
 import '../../../../app/components/resources/styles_manager.dart';
 import '../../../../app/components/widgets/defalut_form_field.dart';
 import '../../../../app/components/widgets/default_button.dart';
+import '../../../../app/encryption/pgp_algorithm.dart';
 import '../../domain/bodies/login_body.dart';
 import '../layouts/chat_layout.dart';
 import 'messenger_screen.dart';
@@ -35,13 +36,12 @@ class _LoginScreenState extends State<LoginScreen> {
     super.initState();
     SocketIO.socket?.on('log-Success', (data) {
       print('Login Success');
-      print(data);
       authModel = AuthModel.fromJson(data);
-      print('Token is : ');
-      print(authModel.token);
       if (authModel.token != null && authModel.user?.sId != null) {
         AppConstants.token = authModel.token!;
         AppConstants.uId = authModel.user!.sId!;
+        AppConstants.phone = authModel.user!.phone!;
+        AppConstants.username = authModel.user!.username!;
       }
 
       SocketIO.socket!.io.options['extraHeaders'] = {
