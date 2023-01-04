@@ -136,10 +136,14 @@ class _ChatScreenState extends State<ChatScreen> {
           id: const Uuid().v4(),
           text: value,
         );
-        if (chatMessageModel.Verified) {
-          _addMessage(textMessage);
+        if (AppConstants.level == 4) {
+          if (chatMessageModel.Verified) {
+            _addMessage(textMessage);
+          } else {
+            showToast(text: 'Message Not verified', state: ToastStates.ERROR);
+          }
         } else {
-          showToast(text: 'Message Not verified', state: ToastStates.ERROR);
+          _addMessage(textMessage);
         }
       } else {
         showToast(
@@ -338,6 +342,7 @@ class _ChatScreenState extends State<ChatScreen> {
     }
     messageModel.message =
         AESAlg.base64ToHex(AESAlg.encryption(plainText: message.text));
+    print('This Is :${messageModel.message}');
 
     print(messageModel.message);
     setState(() {
