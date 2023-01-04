@@ -13,10 +13,5 @@ Future<void> main() async {
   SocketIO.initSocket();
   Rsa.init();
   AppConstants.level = 4;
-
-  runApp(
-    Phoenix(
-      child: MyApp(),
-    ),
-  );
+  runApp(MyApp());
 }

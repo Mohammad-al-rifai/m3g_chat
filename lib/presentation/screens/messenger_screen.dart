@@ -136,14 +136,6 @@ class _ContactsScreenState extends State<ContactsScreen> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          if (mounted) {
-            Phoenix.rebirth(context);
-          }
-        },
-        child: const Icon(Icons.add),
-      ),
     );
   }
 
