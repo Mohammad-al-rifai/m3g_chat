@@ -57,19 +57,41 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   sendMessage(String messageEncrypted) {
+
+
+    // Level #1
+    if(AppConstants.level==1)
+    {
+      SocketIO.socket?.emit('msg', messageModel.toJson());
+      hmacModel.from = AppConstants.uId;
+      hmacModel.to = widget.uId;
+      hmacModel.message = messageEncrypted;
+      messageModel.mac = HMacAlgorithm.create(hmacModel.toJson());
+    }
     // Level #2
-    SocketIO.socket?.emit('msg', messageModel.toJson());
-    hmacModel.from = AppConstants.uId;
-    hmacModel.to = widget.uId;
-    hmacModel.message = messageEncrypted;
-    messageModel.mac = HMacAlgorithm.create(hmacModel.toJson());
+    if(AppConstants.level==2)
+    {
+      SocketIO.socket?.emit('msg-AES', messageModel.toJson());
+      hmacModel.from = AppConstants.uId;
+      hmacModel.to = widget.uId;
+      hmacModel.message = messageEncrypted;
+      messageModel.mac = HMacAlgorithm.create(hmacModel.toJson());
+    }
 
     // Level #3
-    // SocketIO.socket?.emit('msg-PGB', messageModel.toJson());
-    // hmacModel.from = AppConstants.uId;
-    // hmacModel.to = widget.uId;
-    // hmacModel.message = messageEncrypted;
-    // messageModel.mac = HMacAlgorithm.create(hmacModel.toJson());
+    if(AppConstants.level==3)
+    {
+
+      SocketIO.socket?.emit('msg-PGB', messageModel.toJson());
+      hmacModel.from = AppConstants.uId;
+      hmacModel.to = widget.uId;
+      hmacModel.message = messageEncrypted;
+      messageModel.mac = HMacAlgorithm.create(hmacModel.toJson());
+    }
+    if(AppConstants.level==4){
+
+    }
+
   }
 
   getAllChats() {
