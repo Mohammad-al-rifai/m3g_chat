@@ -4,7 +4,6 @@ import 'package:m3g_chat/app/components/resources/constants_manager.dart';
 import 'package:persistent_bottom_nav_bar/persistent_tab_view.dart';
 
 import '../../../../app/components/resources/color_manager.dart';
-import '../screens/chats_screen.dart';
 import '../screens/messenger_screen.dart';
 
 class ChatLayout extends StatefulWidget {
@@ -19,7 +18,7 @@ class _ChatLayoutState extends State<ChatLayout> {
 
   List<Widget> _buildScreens() {
     return [
-      const ChatsScreen(),
+      const ContactsScreen(),
       const ContactsScreen(),
     ];
   }

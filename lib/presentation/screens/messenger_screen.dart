@@ -1,14 +1,15 @@
 // ignore_for_file: must_be_immutable
 
 import 'package:flutter/material.dart';
+import 'package:m3g_chat/app/components/resources/color_manager.dart';
 import 'package:m3g_chat/app/components/resources/constants_manager.dart';
+import 'package:m3g_chat/app/components/resources/styles_manager.dart';
 import 'package:m3g_chat/app/components/widgets/defalut_form_field.dart';
-import 'package:m3g_chat/app/encryption/pgp_algorithm.dart';
 import 'package:m3g_chat/app/logic/func.dart';
-import 'package:m3g_chat/features/main_feature/domain/models/all_users_model.dart';
-import 'package:m3g_chat/features/main_feature/presentation/screens/t_chat_screen.dart';
 
 import '../../../../app/socket_io/socket_io.dart';
+import '../../domain/models/all_users_model.dart';
+import 'chat_screen.dart';
 
 class ContactsScreen extends StatefulWidget {
   const ContactsScreen({Key? key}) : super(key: key);
@@ -32,7 +33,6 @@ class _ContactsScreenState extends State<ContactsScreen> {
     SocketIO.socket?.on('user-in', (data) {
       print('user-in Success');
       AppConstants.publicKey = data['PublicKey'];
-      print('AppConstants.publicKey: ${AppConstants.publicKey}');
       setState(() {});
     });
     SocketIO.socket?.emit('getUsers', {});
@@ -42,15 +42,17 @@ class _ContactsScreenState extends State<ContactsScreen> {
       setState(() {});
     });
 
-    SocketIO.socket?.emit(
-      'newSessionKey',
-      {'SessionKey': AppConstants.sessionKey},
-    );
+    // SocketIO.socket?.emit(
+    //   'newSessionKey',
+    //   {'SessionKey': AppConstants.sessionKey},
+    // );
+    //
+    // SocketIO.socket?.on('Acceptance-session-key', (data) {
+    //   print('Data Is : $data');
+    //   AppConstants.secret = AppConstants.random;
+    // });
 
-    SocketIO.socket?.on('Acceptance-session-key', (data) {
-      print('Data Is : $data');
-      AppConstants.secret = AppConstants.random;
-    });
+
   }
 
   @override
@@ -60,12 +62,13 @@ class _ContactsScreenState extends State<ContactsScreen> {
       appBar: AppBar(
         elevation: 0.0,
         title: Row(
-          children: const [
-            SizedBox(
+          children: [
+            const SizedBox(
               width: 15.0,
             ),
             Text(
-              'Chats',
+              'Chats App',
+              style: getBoldStyle(color: ColorManager.light),
             ),
           ],
         ),
@@ -136,7 +139,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
         onTap: () {
           defaultNavigator(
             context: context,
-            widget: ChatPage(uId: user!.sId!),
+            widget: ChatScreen(uId: user!.sId!),
           );
         },
         child: Row(
@@ -146,8 +149,9 @@ class _ContactsScreenState extends State<ContactsScreen> {
               children: const [
                 CircleAvatar(
                   radius: 30.0,
-                  backgroundImage: NetworkImage(
-                      'https://img.freepik.com/free-photo/waist-up-portrait-handsome-serious-unshaven-male-keeps-hands-together-dressed-dark-blue-shirt-has-talk-with-interlocutor-stands-against-white-wall-self-confident-man-freelancer_273609-16320.jpg?w=996&t=st=1661917658~exp=1661918258~hmac=cb29f519e16efc09291926fb0f0ea80dcfa028b412e2c568d9299bc28a44906d'),
+                  backgroundImage: AssetImage(
+                    'assets/images/person.png',
+                  ),
                 ),
                 Padding(
                   padding: EdgeInsetsDirectional.only(
@@ -169,7 +173,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    user?.username ?? 'Muhammad AlRifai',
+                    user?.username ?? 'Loading user name',
                     style: const TextStyle(
                       fontSize: 16.0,
                       fontWeight: FontWeight.bold,
@@ -184,7 +188,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
                     children: [
                       const Expanded(
                         child: Text(
-                          'Hello My Name Is Muhammad AlRifai Hello My Name Is Muhammad AlRifai Hello My Name Is Muhammad AlRifai',
+                          'Hello, I\'ll see U tomorrow',
                           style: TextStyle(color: Colors.grey),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,

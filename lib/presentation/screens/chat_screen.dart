@@ -13,30 +13,28 @@ import 'package:m3g_chat/app/components/resources/constants_manager.dart';
 import 'package:m3g_chat/app/components/widgets/toast_notification.dart';
 import 'package:m3g_chat/app/encryption/create_h_mac.dart';
 import 'package:m3g_chat/app/socket_io/socket_io.dart';
-import 'package:m3g_chat/features/main_feature/domain/models/all_user_chats.dart';
-import 'package:m3g_chat/features/main_feature/domain/models/hmac_model.dart';
-import 'package:m3g_chat/features/main_feature/domain/models/message_model.dart';
 import 'package:mime/mime.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
-import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 import '../../../../app/encryption/aes.dart';
-import '../../../../config/urls.dart';
+import '../../domain/models/all_user_chats.dart';
 import '../../domain/models/chat_message_model.dart';
 import '../../domain/models/get_chats_model.dart';
+import '../../domain/models/hmac_model.dart';
+import '../../domain/models/message_model.dart';
 
-class ChatPage extends StatefulWidget {
-  const ChatPage({required this.uId, super.key});
+class ChatScreen extends StatefulWidget {
+  const ChatScreen({required this.uId, super.key});
 
   final String uId;
 
   @override
-  State<ChatPage> createState() => _ChatPageState();
+  State<ChatScreen> createState() => _ChatScreenState();
 }
 
-class _ChatPageState extends State<ChatPage> {
+class _ChatScreenState extends State<ChatScreen> {
   HMacModel hmacModel = HMacModel();
 
   MessageModel messageModel = MessageModel(
@@ -59,17 +57,19 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   sendMessage(String messageEncrypted) {
-  //   SocketIO.socket?.emit('msg', messageModel.toJson());
-  //   hmacModel.from = AppConstants.uId;
-  //   hmacModel.to = widget.uId;
-  //   hmacModel.message = messageEncrypted;
-  //   messageModel.mac = HMacAlgorithm.create(hmacModel.toJson());
-  // }
-    SocketIO.socket?.emit('msg-PGB', messageModel.toJson());
+    // Level #2
+    SocketIO.socket?.emit('msg', messageModel.toJson());
     hmacModel.from = AppConstants.uId;
     hmacModel.to = widget.uId;
     hmacModel.message = messageEncrypted;
     messageModel.mac = HMacAlgorithm.create(hmacModel.toJson());
+
+    // Level #3
+    // SocketIO.socket?.emit('msg-PGB', messageModel.toJson());
+    // hmacModel.from = AppConstants.uId;
+    // hmacModel.to = widget.uId;
+    // hmacModel.message = messageEncrypted;
+    // messageModel.mac = HMacAlgorithm.create(hmacModel.toJson());
   }
 
   getAllChats() {
@@ -104,10 +104,11 @@ class _ChatPageState extends State<ChatPage> {
     SocketIO.socket?.on('message', (data) {
       ChatMessageModel chatMessageModel = ChatMessageModel.fromJson(data);
       allChats[chatMessageModel.from?.sId]?.add(chatMessageModel);
+
       if (chatMessageModel.from?.sId == widget.uId) {
         String value = AESAlg.decryption(
-            cipherText:
-                base64.encode(decodeHexString(chatMessageModel.message!)));
+          cipherText: base64.encode(decodeHexString(chatMessageModel.message!)),
+        );
         final textMessage = types.TextMessage(
           author: types.User(id: widget.uId),
           createdAt: DateTime.now().millisecondsSinceEpoch,

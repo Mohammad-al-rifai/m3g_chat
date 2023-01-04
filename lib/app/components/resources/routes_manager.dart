@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:m3g_chat/app/components/resources/string_manager.dart';
-import '../../../features/main_feature/presentation/screens/splash_screen.dart';
+
+import '../../../presentation/screens/splash_screen.dart';
 
 class Routes {
   static const String splashRoute = "/";

@@ -1,31 +1,36 @@
+// ignore_for_file: must_be_immutable
+
 import 'package:flutter/material.dart';
 import 'package:m3g_chat/app/components/resources/constants_manager.dart';
-import 'package:m3g_chat/app/logic/func.dart';
-import 'package:m3g_chat/app/socket_io/socket_io.dart';
-import 'package:m3g_chat/features/main_feature/domain/models/auth_model.dart';
-import 'package:m3g_chat/features/main_feature/presentation/screens/register_screen.dart';
 
 import '../../../../app/components/resources/color_manager.dart';
 import '../../../../app/components/resources/styles_manager.dart';
 import '../../../../app/components/widgets/defalut_form_field.dart';
 import '../../../../app/components/widgets/default_button.dart';
-import '../../../../app/encryption/pgp_algorithm.dart';
-import '../../domain/bodies/login_body.dart';
-import '../layouts/chat_layout.dart';
+import '../../../../app/logic/func.dart';
+import '../../../../app/socket_io/socket_io.dart';
+import '../../domain/bodies/register_body.dart';
+import '../../domain/models/auth_model.dart';
+import 'login_screen.dart';
 import 'messenger_screen.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({Key? key}) : super(key: key);
+class RegisterScreen extends StatefulWidget {
+  const RegisterScreen({Key? key}) : super(key: key);
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
-  TextEditingController phoneController = TextEditingController();
-  TextEditingController passwordController = TextEditingController();
+class _RegisterScreenState extends State<RegisterScreen> {
+  var phoneController = TextEditingController();
+
+  var passwordController = TextEditingController();
+
+  var userNameController = TextEditingController();
+
   var formKey = GlobalKey<FormState>();
-  LoginBody loginBody = LoginBody();
+
+  final RegisterBody _registerBody = RegisterBody();
 
   AuthModel authModel = AuthModel();
 
@@ -34,32 +39,37 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
-    SocketIO.socket?.on('log-Success', (data) {
-      print('Login Success');
+    SocketIO.socket?.on('Reg-Success', (data) {
+      print('Register Success');
       authModel = AuthModel.fromJson(data);
+      print('Token is : ');
+      print(authModel.token);
       if (authModel.token != null && authModel.user?.sId != null) {
         AppConstants.token = authModel.token!;
         AppConstants.uId = authModel.user!.sId!;
         AppConstants.phone = authModel.user!.phone!;
         AppConstants.username = authModel.user!.username!;
       }
-
       SocketIO.socket!.io.options['extraHeaders'] = {
         'token': 'Bearer ${authModel.token!}'
       }; // Update the extra headers.
       SocketIO.socket!.io
         ..disconnect()
         ..connect(); // Reconnect the socket manually.
-
       defaultReplaceNavigator(context: context, widget: const ContactsScreen());
     });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('M3G Chat'),
+        title: const Text('Welcome To Chat App'),
       ),
       body: Center(
         child: SingleChildScrollView(
@@ -71,32 +81,46 @@ class _LoginScreenState extends State<LoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'LOGIN',
+                    'Register',
                     style: Theme.of(context).textTheme.displayLarge,
                   ),
                   const SizedBox(
                     height: 15.0,
                   ),
                   Text(
-                    'M3G App Will Travel with you over the universe',
+                    'Register Now to chat with your Friends',
                     style: Theme.of(context).textTheme.displayMedium,
                   ),
                   const SizedBox(
-                    height: 15.0,
+                    height: 20.0,
+                  ),
+                  DefaultFormField(
+                    controller: userNameController,
+                    keyboardType: TextInputType.text,
+                    label: 'User Name',
+                    prefixIcon: Icons.person,
+                    validator: (String value) {
+                      if (value.isEmpty) {
+                        return ' User Name Required!';
+                      }
+                    },
+                  ),
+                  const SizedBox(
+                    height: 20.0,
                   ),
                   DefaultFormField(
                     controller: phoneController,
                     keyboardType: TextInputType.phone,
                     label: 'your Phone',
-                    prefixIcon: Icons.email,
+                    prefixIcon: Icons.call,
                     validator: (String value) {
                       if (value.isEmpty) {
-                        return 'Your Phone Required!';
+                        return 'Phone Required!';
                       }
                     },
                   ),
                   const SizedBox(
-                    height: 15.0,
+                    height: 20.0,
                   ),
                   DefaultFormField(
                     controller: passwordController,
@@ -118,13 +142,14 @@ class _LoginScreenState extends State<LoginScreen> {
                         setState(() {
                           isLoading = !isLoading;
                         });
-                        loginBody.phone = int.parse(phoneController.text);
-                        loginBody.password = passwordController.text;
-
-                        SocketIO.socket?.emit('login', loginBody.toJson());
+                        _registerBody.username = userNameController.text;
+                        _registerBody.phone = int.parse(phoneController.text);
+                        _registerBody.password = passwordController.text;
+                        SocketIO.socket
+                            ?.emit('createUser', _registerBody.toJson());
                       }
                     },
-                    text: 'Login',
+                    text: 'register',
                     isUpperCase: true,
                     isLoading: isLoading,
                   ),
@@ -132,7 +157,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
                       Text(
-                        'Don\'t Have Account? ',
+                        'Have Account? ',
                         style: getLightStyle(
                           color: ColorManager.lightGrey,
                         ),
@@ -141,11 +166,11 @@ class _LoginScreenState extends State<LoginScreen> {
                         onPressed: () {
                           defaultReplaceNavigator(
                             context: context,
-                            widget: const RegisterScreen(),
+                            widget: const LoginScreen(),
                           );
                         },
                         child: Text(
-                          'Register Now',
+                          'Login Now',
                           style: getMediumStyle(
                             color: ColorManager.primary,
                           ),
