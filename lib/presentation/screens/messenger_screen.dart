@@ -35,7 +35,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
       AppConstants.publicKey = data['PublicKey'];
       setState(() {});
     });
-    SocketIO.socket?.emit('getUsers', {});
+    SocketIO.socket?.emit('getUsers', {}); // send  Request
     SocketIO.socket?.on('All-Users', (data) {
       print('Get Users Success');
       allUsersModel = AllUsersModel.fromJson(data);

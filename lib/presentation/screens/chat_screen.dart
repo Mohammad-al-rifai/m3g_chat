@@ -64,7 +64,7 @@ class _ChatScreenState extends State<ChatScreen> {
     hmacModel.message = messageEncrypted;
     messageModel.mac = HMacAlgorithm.create(hmacModel.toJson());
 
-    // Level #3
+    // // Level #3
     // SocketIO.socket?.emit('msg-PGB', messageModel.toJson());
     // hmacModel.from = AppConstants.uId;
     // hmacModel.to = widget.uId;
@@ -309,8 +309,9 @@ class _ChatScreenState extends State<ChatScreen> {
     );
     messageModel.message =
         AESAlg.base64ToHex(AESAlg.encryption(plainText: message.text));
+    print('here: =====>');
+    print(messageModel.message );
 
-    print(messageModel.message);
     setState(() {
       sendMessage(messageModel.message.toString());
       print('Message Was Sent Success');
