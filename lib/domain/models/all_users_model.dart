@@ -23,7 +23,7 @@ class AllUsersModel {
 
 class Users {
   String? sId;
-  int? phone;
+  var phone;
   String? username;
   int? createdAt;
   int? iV;

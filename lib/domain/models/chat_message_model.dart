@@ -1,3 +1,11 @@
+import 'dart:convert';
+
+import 'package:encrypt/encrypt.dart';
+import 'package:m3g_chat/app/encryption/aes.dart';
+
+import '../../app/components/resources/constants_manager.dart';
+import '../../app/encryption/SignAndVerify.dart';
+
 class ChatMessageModel {
   String? sId;
   String? chatId;
@@ -6,6 +14,9 @@ class ChatMessageModel {
   String? message;
   int? sendAt;
   int? iV;
+  String? pubKey;
+  String? signature;
+  bool Verified = false;
 
   ChatMessageModel(
       {this.sId,
@@ -17,13 +28,31 @@ class ChatMessageModel {
       this.iV});
 
   ChatMessageModel.fromJson(Map<String, dynamic> json) {
-    sId = json['_id'];
-    chatId = json['chatId'];
-    from = json['from'] != null ? From.fromJson(json['from']) : null;
-    to = json['to'] != null ? From.fromJson(json['to']) : null;
-    message = json['message'];
-    sendAt = json['sendAt'];
-    iV = json['__v'];
+    print(json);
+    sId = json['sentMessage']['_id'];
+    chatId = json['sentMessage']['chatId'];
+    from = json['sentMessage']['from'] != null
+        ? From.fromJson(json['sentMessage']['from'])
+        : null;
+    to = json['sentMessage']['to'] != null
+        ? From.fromJson(json['sentMessage']['to'])
+        : null;
+    message = json['sentMessage']['message'];
+    print('Resi Message : $message');
+    sendAt = json['sentMessage']['sendAt'];
+    iV = json['sentMessage']['__v'];
+
+    if (AppConstants.level == 4) {
+      signature = json['signature'];
+      pubKey = json['pubKey'];
+
+      Verified = Rsa.verify(AESAlg.decryption(cipherText: base64.encode(decodeHexString(message ?? 'No Message'))), signature, pubKey ?? 'noPub');
+      print('**************************************************************');
+      print(pubKey);
+      print(signature);
+      print(Verified);
+      print('**************************************************************');
+    }
   }
 
   Map<String, dynamic> toJson() {

@@ -1,10 +1,12 @@
 // ignore_for_file: must_be_immutable
 
 import 'package:flutter/material.dart';
+import 'package:flutter_phoenix/flutter_phoenix.dart';
 import 'package:m3g_chat/app/components/resources/color_manager.dart';
 import 'package:m3g_chat/app/components/resources/constants_manager.dart';
 import 'package:m3g_chat/app/components/resources/styles_manager.dart';
 import 'package:m3g_chat/app/components/widgets/defalut_form_field.dart';
+import 'package:m3g_chat/app/encryption/pgp_algorithm.dart';
 import 'package:m3g_chat/app/logic/func.dart';
 
 import '../../../../app/socket_io/socket_io.dart';
@@ -42,17 +44,19 @@ class _ContactsScreenState extends State<ContactsScreen> {
       setState(() {});
     });
 
-    // SocketIO.socket?.emit(
-    //   'newSessionKey',
-    //   {'SessionKey': AppConstants.sessionKey},
-    // );
-    //
-    // SocketIO.socket?.on('Acceptance-session-key', (data) {
-    //   print('Data Is : $data');
-    //   AppConstants.secret = AppConstants.random;
-    // });
+    if (AppConstants.level == 3 || AppConstants.level == 4) {
+      PGPAlGO.encryptSession().then((value) {
+        SocketIO.socket?.emit(
+          'newSessionKey',
+          {'SessionKey': value},
+        );
+      });
 
-
+      SocketIO.socket?.on('Acceptance-session-key', (data) {
+        print('Data Is : $data');
+        AppConstants.secret = AppConstants.random;
+      });
+    }
   }
 
   @override
@@ -131,6 +135,14 @@ class _ContactsScreenState extends State<ContactsScreen> {
             ),
           ],
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          if (mounted) {
+            Phoenix.rebirth(context);
+          }
+        },
+        child: const Icon(Icons.add),
       ),
     );
   }

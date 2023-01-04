@@ -19,6 +19,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../app/encryption/aes.dart';
+import '../../app/encryption/SignAndVerify.dart';
 import '../../domain/models/all_user_chats.dart';
 import '../../domain/models/chat_message_model.dart';
 import '../../domain/models/get_chats_model.dart';
@@ -57,19 +58,38 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   sendMessage(String messageEncrypted) {
+    // Level #1
+    if (AppConstants.level == 1) {
+      SocketIO.socket?.emit('msg', messageModel.toJson());
+      hmacModel.from = AppConstants.uId;
+      hmacModel.to = widget.uId;
+      hmacModel.message = messageEncrypted;
+      messageModel.mac = HMacAlgorithm.create(hmacModel.toJson());
+    }
     // Level #2
-    SocketIO.socket?.emit('msg', messageModel.toJson());
-    hmacModel.from = AppConstants.uId;
-    hmacModel.to = widget.uId;
-    hmacModel.message = messageEncrypted;
-    messageModel.mac = HMacAlgorithm.create(hmacModel.toJson());
+    if (AppConstants.level == 2) {
+      SocketIO.socket?.emit('msg-AES', messageModel.toJson());
+      hmacModel.from = AppConstants.uId;
+      hmacModel.to = widget.uId;
+      hmacModel.message = messageEncrypted;
+      messageModel.mac = HMacAlgorithm.create(hmacModel.toJson());
+    }
 
-    // // Level #3
-    // SocketIO.socket?.emit('msg-PGB', messageModel.toJson());
-    // hmacModel.from = AppConstants.uId;
-    // hmacModel.to = widget.uId;
-    // hmacModel.message = messageEncrypted;
-    // messageModel.mac = HMacAlgorithm.create(hmacModel.toJson());
+    // Level #3
+    if (AppConstants.level == 3) {
+      SocketIO.socket?.emit('msg-PGB', messageModel.toJson());
+      hmacModel.from = AppConstants.uId;
+      hmacModel.to = widget.uId;
+      hmacModel.message = messageEncrypted;
+      messageModel.mac = HMacAlgorithm.create(hmacModel.toJson());
+    }
+    if (AppConstants.level == 4) {
+      SocketIO.socket?.emit('msg-Rsa-Sign-Ver', messageModel.toJson());
+      hmacModel.from = AppConstants.uId;
+      hmacModel.to = widget.uId;
+      hmacModel.message = messageEncrypted;
+      messageModel.mac = HMacAlgorithm.create(hmacModel.toJson());
+    }
   }
 
   getAllChats() {
@@ -103,6 +123,7 @@ class _ChatScreenState extends State<ChatScreen> {
   receiveMessage() {
     SocketIO.socket?.on('message', (data) {
       ChatMessageModel chatMessageModel = ChatMessageModel.fromJson(data);
+      print(chatMessageModel.Verified);
       allChats[chatMessageModel.from?.sId]?.add(chatMessageModel);
 
       if (chatMessageModel.from?.sId == widget.uId) {
@@ -115,7 +136,11 @@ class _ChatScreenState extends State<ChatScreen> {
           id: const Uuid().v4(),
           text: value,
         );
-        _addMessage(textMessage);
+        if (chatMessageModel.Verified) {
+          _addMessage(textMessage);
+        } else {
+          showToast(text: 'Message Not verified', state: ToastStates.ERROR);
+        }
       } else {
         showToast(
             text: 'New Message from ${chatMessageModel.from?.username}',
@@ -124,7 +149,6 @@ class _ChatScreenState extends State<ChatScreen> {
       print(data);
       print(allChats);
     });
-    // setState(() {});
   }
 
   @override
@@ -307,11 +331,15 @@ class _ChatScreenState extends State<ChatScreen> {
       id: const Uuid().v4(),
       text: message.text,
     );
+    if (AppConstants.level == 4) {
+      messageModel.signature = Rsa.sign(message.text);
+      print(Rsa.keys.publicKey.toString());
+      messageModel.pubKey = Rsa.keys.publicKey.toString();
+    }
     messageModel.message =
         AESAlg.base64ToHex(AESAlg.encryption(plainText: message.text));
-    print('here: =====>');
-    print(messageModel.message );
 
+    print(messageModel.message);
     setState(() {
       sendMessage(messageModel.message.toString());
       print('Message Was Sent Success');

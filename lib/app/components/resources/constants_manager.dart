@@ -5,7 +5,7 @@ class AppConstants {
   static String uId = '';
   static int phone = 9966969170;
   static String username = 'user name';
-
+  static int level=1;
   static dynamic publicKey = '''-----BEGIN PUBLIC KEY-----
 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAno8eITKA3gPViCS2M0yN
 OMlO9SMZo9CBDVXw4Dcf9pFYuZdY/7xuKVijvAG5tfFrlY9njUcrYvknm0bCM6kW

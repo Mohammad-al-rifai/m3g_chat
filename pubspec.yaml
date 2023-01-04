@@ -5,7 +5,7 @@ publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: '>=2.18.4 <3.0.0'
+  sdk: '>=2.18.2 <3.0.0'
 
 dependencies:
   flutter:
@@ -30,6 +30,9 @@ dependencies:
   pointycastle: ^3.6.2
   cryptography: ^2.0.5
   crypton:
+  crypto_keys: ^0.3.0+1
+  flutter_phoenix: ^1.1.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
