@@ -8,8 +8,12 @@ class PGPAlGO {
   static Future<String> encryptSession() async {
     final publicPem = await rootBundle.loadString('assets/public.pem');
     final publicKey = RSAKeyParser().parse(publicPem) as RSAPublicKey;
+
+
     final privatePem = await rootBundle.loadString('assets/private.pem');
     final privKey = RSAKeyParser().parse(privatePem) as RSAPrivateKey;
+
+
     final encrypter = Encrypter(RSA(publicKey: publicKey, privateKey: privKey));
     String plainText = getRandomSessionKey();
     AppConstants.random = plainText;

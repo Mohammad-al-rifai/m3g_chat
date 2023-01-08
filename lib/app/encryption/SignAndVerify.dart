@@ -33,7 +33,7 @@ class Rsa {
     RSAPublicKey public = RSAPublicKey.fromString(pub);
     sign = base64.decode(sign);
     bool verified = public.verifySHA256Signature(
-      AESAlg.convertStringToUint8List(msg),
+      AESAlg.convertStringToUint8List("msg"),
       sign,
     );
     print("Verified: $verified");
